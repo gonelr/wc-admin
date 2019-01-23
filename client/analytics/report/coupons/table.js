@@ -18,6 +18,7 @@ import { formatCurrency, getCurrencyFormatDecimal } from '@woocommerce/currency'
  */
 import ReportTable from 'analytics/components/report-table';
 import { numberFormat } from 'lib/number';
+import { getCouponLabels } from 'lib/async-requests';
 
 export default class CouponsReportTable extends Component {
 	constructor() {
@@ -157,10 +158,13 @@ export default class CouponsReportTable extends Component {
 				compareBy="coupons"
 				endpoint="coupons"
 				getHeadersContent={ this.getHeadersContent }
+				getLabels={ getCouponLabels }
 				getRowsContent={ this.getRowsContent }
 				getSummary={ this.getSummary }
 				itemIdField="coupon_id"
 				query={ query }
+				searchBy="coupons"
+				searchParam="coupons"
 				tableQuery={ {
 					orderby: query.orderby || 'coupon_id',
 					order: query.order || 'asc',
