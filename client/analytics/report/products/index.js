@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 /**
  * WooCommerce dependencies
  */
-import { ReportFilters } from '@woocommerce/components';
+import { ReportFilters, SummaryListPlaceholder, ChartPlaceholder } from '@woocommerce/components';
 
 /**
  * Internal dependencies
@@ -19,6 +19,7 @@ import { charts, filters } from './config';
 import getSelectedChart from 'lib/get-selected-chart';
 import ProductsReportTable from './table';
 import ReportChart from 'analytics/components/report-chart';
+import ReportError from 'analytics/components/report-error';
 import ReportSummary from 'analytics/components/report-summary';
 import VariationsReportTable from './table-variations';
 import withSelect from 'wc-api/with-select';
@@ -33,7 +34,9 @@ class ProductsReport extends Component {
 			( query.products && 1 < query.products.split( ',' ).length );
 
 		const mode =
-			isProductDetailsView || isSingleProductView ? 'item-comparison' : 'time-comparison';
+			isProductDetailsView || ( isSingleProductView && isSingleProductVariable )
+				? 'item-comparison'
+				: 'time-comparison';
 		const compareObject =
 			isSingleProductView && isSingleProductVariable ? 'variations' : 'products';
 		const label =
@@ -59,8 +62,26 @@ class ProductsReport extends Component {
 			isSingleProductVariable,
 		} = this.props;
 
-		if ( isProductsError || isProductsRequesting ) {
-			return null;
+		if ( isProductsError ) {
+			return <ReportError isError />;
+		}
+
+		if ( isProductsRequesting ) {
+			return (
+				<Fragment>
+					<ReportFilters query={ query } path={ path } filters={ filters } />
+					<SummaryListPlaceholder numberOfItems={ charts.length } />
+					<span className="screen-reader-text">
+						{ __( 'Your requested data is loading', 'wc-admin' ) }
+					</span>
+					<div className="woocommerce-chart">
+						<div className="woocommerce-chart__body">
+							<ChartPlaceholder height={ 220 } />
+						</div>
+					</div>
+					<ProductsReportTable query={ query } />
+				</Fragment>
+			);
 		}
 
 		const chartQuery = {
