@@ -17,14 +17,14 @@ const getProducts = ( getResource, requireResource ) => (
 ) => {
 	const resourceName = getResourceName( 'product-query', query );
 	const ids = requireResource( requirement, resourceName ).data || [];
-	const categories = ids.reduce(
+	const products = ids.reduce(
 		( acc, id ) => ( {
 			...acc,
 			[ id ]: getResource( getResourceName( 'product', id ) ).data || {},
 		} ),
 		{}
 	);
-	return categories;
+	return products;
 };
 
 const getProductsError = getResource => ( query = {} ) => {
