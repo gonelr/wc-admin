@@ -139,7 +139,8 @@ const filterConfig = {
 };
 
 const variationsConfig = {
-	showFilters: query => 'single_product' === query.filter && !! query.products && query.isVariable,
+	showFilters: query =>
+		'single_product' === query.filter && !! query.products && query[ 'is-variable' ],
 	staticParams: [ 'filter', 'products' ],
 	param: 'filter-variations',
 	filters: [

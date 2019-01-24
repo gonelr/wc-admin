@@ -163,12 +163,12 @@ function getRequestQuery( endpoint, dataType, query ) {
 	const filterQuery = getFilterQuery( endpoint, query );
 	const end = datesFromQuery[ dataType ].before;
 	return {
-		segmentby: query.segmentby,
 		order: 'asc',
 		interval,
 		per_page: MAX_PER_PAGE,
 		after: appendTimestamp( datesFromQuery[ dataType ].after, 'start' ),
 		before: appendTimestamp( end, 'end' ),
+		segmentby: query.segmentby,
 		...filterQuery,
 	};
 }

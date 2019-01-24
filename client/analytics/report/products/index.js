@@ -24,37 +24,33 @@ import VariationsReportTable from './table-variations';
 import withSelect from 'wc-api/with-select';
 
 class ProductsReport extends Component {
-	getChartTypes() {
+	getChartMeta() {
 		const { query, isSingleProductView, isSingleProductVariable } = this.props;
+
 		const isProductDetailsView =
-			( query.products && 1 < query.products.split( ',' ).length ) ||
 			'top_items' === query.filter ||
-			'top_sales' === query.filter;
-		let compareMode = null;
-		let itemsLabel = __( '%s products', 'wc-admin' );
-		let mode = 'time-comparison';
+			'top_sales' === query.filter ||
+			( query.products && 1 < query.products.split( ',' ).length );
 
-		if ( isProductDetailsView ) {
-			compareMode = 'products';
-			mode = 'item-comparison';
-		} else if ( isSingleProductView && isSingleProductVariable ) {
-			compareMode = 'variations';
-			itemsLabel = __( '%s variations', 'wc-admin' );
-			mode = 'item-comparison';
-		}
+		const mode =
+			isProductDetailsView || isSingleProductView ? 'item-comparison' : 'time-comparison';
+		const compareObject =
+			isSingleProductView && isSingleProductVariable ? 'variations' : 'products';
+		const label =
+			isSingleProductView && isSingleProductVariable
+				? __( '%s variations', 'wc-admin' )
+				: __( '%s products', 'wc-admin' );
 
-		const test = {
+		return {
 			isProductDetailsView,
-			compareMode,
-			itemsLabel,
+			compareObject,
+			itemsLabel: label,
 			mode,
 		};
-
-		console.log( test );
-		return test;
 	}
 
 	render() {
+		const { compareObject, itemsLabel, mode } = this.getChartMeta();
 		const {
 			path,
 			query,
@@ -62,10 +58,17 @@ class ProductsReport extends Component {
 			isProductsRequesting,
 			isSingleProductVariable,
 		} = this.props;
-		const { compareMode, itemsLabel, mode } = this.getChartTypes();
 
 		if ( isProductsError || isProductsRequesting ) {
 			return null;
+		}
+
+		const chartQuery = {
+			...query,
+		};
+
+		if ( 'item-comparison' === mode ) {
+			chartQuery.segmentby = 'products' === compareObject ? 'product' : 'variation';
 		}
 
 		return (
@@ -73,22 +76,20 @@ class ProductsReport extends Component {
 				<ReportFilters query={ query } path={ path } filters={ filters } />
 				<ReportSummary
 					mode={ mode }
-					compareMode={ compareMode }
 					charts={ charts }
 					endpoint="products"
-					query={ query }
+					query={ chartQuery }
 					selectedChart={ getSelectedChart( query.chart, charts ) }
 				/>
 				<ReportChart
 					mode={ mode }
-					compareMode={ compareMode }
 					filters={ filters }
 					charts={ charts }
 					endpoint="products"
 					itemsLabel={ itemsLabel }
 					path={ path }
-					query={ query }
-					selectedChart={ getSelectedChart( query.chart, charts ) }
+					query={ chartQuery }
+					selectedChart={ getSelectedChart( chartQuery.chart, charts ) }
 				/>
 				{ isSingleProductVariable ? (
 					<VariationsReportTable query={ query } />
@@ -108,28 +109,30 @@ ProductsReport.propTypes = {
 export default compose(
 	withSelect( ( select, props ) => {
 		const { query } = props;
-
+		const { getProducts, isGetProductsRequesting, getProductsError } = select( 'wc-api' );
 		const isSingleProductView = query.products && 1 === query.products.split( ',' ).length;
-		let isSingleProductVariable = false;
-		let isProductsRequesting = false;
-		let isProductsError = false;
-
 		if ( isSingleProductView ) {
-			const { getProducts, isGetProductsRequesting, getProductsError } = select( 'wc-api' );
-			const products = getProducts( { include: query.products } );
-			isSingleProductVariable =
+			const includeArgs = { include: query.products };
+			const products = getProducts( includeArgs );
+			const isVariable =
 				products[ query.products ] && 'variable' === products[ query.products ].type;
-			query.isVariable = isSingleProductVariable;
-			isProductsRequesting = isGetProductsRequesting( { include: query.products } );
-			isProductsError = getProductsError( { include: query.products } );
+			const isProductsRequesting = isGetProductsRequesting( includeArgs );
+			const isProductsError = getProductsError( includeArgs );
+			return {
+				query: {
+					...query,
+					'is-variable': isVariable,
+				},
+				isSingleProductView,
+				isSingleProductVariable: isVariable,
+				isProductsRequesting,
+				isProductsError,
+			};
 		}
 
 		return {
 			query,
 			isSingleProductView,
-			isSingleProductVariable,
-			isProductsRequesting,
-			isProductsError,
 		};
 	} )
 )( ProductsReport );

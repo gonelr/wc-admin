@@ -6,7 +6,6 @@ import { Component } from '@wordpress/element';
 import { compose } from '@wordpress/compose';
 import { format as formatDate } from '@wordpress/date';
 import PropTypes from 'prop-types';
-import { isEmpty } from 'lodash';
 
 /**
  * WooCommerce dependencies
@@ -33,9 +32,9 @@ import { getChartMode } from './utils';
  * Component that renders the chart in reports.
  */
 export class ReportChart extends Component {
-	getComparisonChartData() {
-		const { segmentData, selectedChart } = this.props;
-		const chartData = segmentData.data.intervals.map( function( interval ) {
+	getItemChartData() {
+		const { primaryData, selectedChart } = this.props;
+		const chartData = primaryData.data.intervals.map( function( interval ) {
 			const intervalData = {};
 			interval.subtotals.segments.forEach( function( segment ) {
 				if ( segment.segment_label ) {
@@ -85,53 +84,21 @@ export class ReportChart extends Component {
 		return chartData;
 	}
 
-	render() {
+	renderChart( isRequesting, chartData ) {
 		const {
 			interactiveLegend,
 			itemsLabel,
 			legendPosition,
 			path,
-			primaryData,
 			query,
-			secondaryData,
 			selectedChart,
 			showHeaderControls,
-			chartMode,
-			segmentData,
+			mode,
+			primaryData,
 		} = this.props;
-
 		const currentInterval = getIntervalForQuery( query );
-
-		let isRequesting;
-		let chartData;
-		let formats;
-
-		if ( 'item-comparison' === chartMode ) {
-			if ( segmentData.isError ) {
-				return <ReportError isError />;
-			}
-
-			isRequesting = segmentData.isRequesting;
-			chartData = this.getComparisonChartData();
-			formats = getDateFormatsForInterval( currentInterval, segmentData.data.intervals.length );
-		}
-
-		if ( 'time-comparison' === chartMode ) {
-			if ( ! primaryData || primaryData.isError || secondaryData.isError ) {
-				return <ReportError isError />;
-			}
-
-			isRequesting = primaryData.isRequesting || secondaryData.isRequesting;
-			chartData = this.getTimeChartData();
-			formats = getDateFormatsForInterval( currentInterval, primaryData.data.intervals.length );
-		}
-
 		const allowedIntervals = getAllowedIntervalsForQuery( query );
-
-		if ( isEmpty( chartData ) ) {
-			return null;
-		}
-
+		const formats = getDateFormatsForInterval( currentInterval, primaryData.data.intervals.length );
 		return (
 			<Chart
 				allowedIntervals={ allowedIntervals }
@@ -142,13 +109,13 @@ export class ReportChart extends Component {
 				isRequesting={ isRequesting }
 				itemsLabel={ itemsLabel }
 				legendPosition={ legendPosition }
-				mode={ chartMode }
+				mode={ mode }
 				path={ path }
 				query={ query }
 				showHeaderControls={ showHeaderControls }
 				title={ selectedChart.label }
 				tooltipLabelFormat={ formats.tooltipLabelFormat }
-				tooltipTitle={ 'time-comparison' === chartMode && selectedChart.label }
+				tooltipTitle={ ( 'time-comparison' === mode && selectedChart.label ) || null }
 				tooltipValueFormat={ getTooltipValueFormat( selectedChart.type ) }
 				type={ getChartTypeForQuery( query ) }
 				valueType={ selectedChart.type }
@@ -156,6 +123,40 @@ export class ReportChart extends Component {
 				x2Format={ formats.x2Format }
 			/>
 		);
+	}
+
+	renderItemComparison() {
+		const { primaryData } = this.props;
+
+		if ( primaryData.isError ) {
+			return <ReportError isError />;
+		}
+
+		const isRequesting = primaryData.isRequesting;
+		const chartData = this.getItemChartData();
+
+		return this.renderChart( isRequesting, chartData );
+	}
+
+	renderTimeComparison() {
+		const { primaryData, secondaryData } = this.props;
+
+		if ( ! primaryData || primaryData.isError || secondaryData.isError ) {
+			return <ReportError isError />;
+		}
+
+		const isRequesting = primaryData.isRequesting || secondaryData.isRequesting;
+		const chartData = this.getTimeChartData();
+
+		return this.renderChart( isRequesting, chartData );
+	}
+
+	render() {
+		const { mode } = this.props;
+		if ( 'item-comparison' === mode ) {
+			return this.renderItemComparison();
+		}
+		return this.renderTimeComparison();
 	}
 }
 
@@ -188,7 +189,7 @@ ReportChart.propTypes = {
 	/**
 	 * Secondary data to display in the chart.
 	 */
-	secondaryData: PropTypes.object.isRequired,
+	secondaryData: PropTypes.object,
 	/**
 	 * Properties of the selected chart.
 	 */
@@ -197,18 +198,14 @@ ReportChart.propTypes = {
 
 export default compose(
 	withSelect( ( select, props ) => {
-		const { query, endpoint, mode, filters, compareMode } = props;
+		const { query, endpoint, filters } = props;
+		const mode = props.mode || getChartMode( filters, query ) || 'time-comparison';
 
-		const chartMode = mode || getChartMode( filters, query ) || 'time-comparison';
-
-		// TODO Clean this one up.. Rename "segment" since comparisons are not segments?
 		if ( 'item-comparison' === mode ) {
-			const segmentQuery = { ...query };
-			segmentQuery.segmentby = 'products' === compareMode ? 'product' : 'variation';
-			const segmentData = getReportChartData( endpoint, 'primary', segmentQuery, select );
+			const primaryData = getReportChartData( endpoint, 'primary', query, select );
 			return {
-				segmentData,
-				chartMode,
+				primaryData,
+				mode,
 			};
 		}
 
@@ -217,7 +214,7 @@ export default compose(
 		return {
 			primaryData,
 			secondaryData,
-			chartMode,
+			mode,
 		};
 	} )
 )( ReportChart );

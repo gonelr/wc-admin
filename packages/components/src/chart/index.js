@@ -60,8 +60,6 @@ function getOrderedKeys( props, previousOrderedKeys = [] ) {
 	].map( ( key ) => {
 		const previousKey = previousOrderedKeys.find( item => key === item.key );
 		const defaultVisibleStatus = 'item-comparison' === props.mode ? false : true;
-		console.log( props.data );
-		console.log( key );
 		return {
 			key,
 			total: props.data.reduce( ( a, c ) => a + c[ key ].value, 0 ),

@@ -132,7 +132,6 @@ export default class VariationsReportTable extends Component {
 		if ( ! totals ) {
 			return [];
 		}
-		console.log( totals );
 		return [
 			{
 				label: _n( 'variation sold', 'variations sold', totals.variations_count, 'wc-admin' ),
