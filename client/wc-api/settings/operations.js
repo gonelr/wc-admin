@@ -6,11 +6,6 @@
 import apiFetch from '@wordpress/api-fetch';
 import { pick } from 'lodash';
 
-/**
- * Internal dependencies
- */
-import { NAMESPACE } from '../constants';
-
 function read( resourceNames, fetch = apiFetch ) {
 	return [ ...readSettings( resourceNames, fetch ) ];
 }
@@ -39,15 +34,11 @@ function updateSettings( resourceNames, data, fetch ) {
 	const settingsFields = [ 'woocommerce_excluded_report_order_statuses' ];
 
 	if ( resourceNames.includes( resourceName ) ) {
-		const url = NAMESPACE + '/settings/wc_admin/';
+		const url = '/wc/v3/settings/wc_admin/';
 		const settingsData = pick( data[ resourceName ], settingsFields );
 
 		const promises = Object.keys( settingsData ).map( setting => {
-			let value = settingsData[ setting ];
-			if ( Array.isArray( value ) ) {
-				value = value.join( ',' );
-			}
-			return fetch( { path: url + setting, method: 'POST', data: { value: value } } )
+			return fetch( { path: url + setting, method: 'POST', data: { value: settingsData[ setting ] } } )
 				.then( settingsToSettingsResource )
 				.catch( error => {
 					return { [ resourceName ]: { error } };
