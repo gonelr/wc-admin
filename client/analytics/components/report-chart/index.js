@@ -84,7 +84,7 @@ export class ReportChart extends Component {
 		return chartData;
 	}
 
-	renderChart( isRequesting, chartData ) {
+	renderChart( mode, isRequesting, chartData ) {
 		const {
 			interactiveLegend,
 			itemsLabel,
@@ -93,7 +93,7 @@ export class ReportChart extends Component {
 			query,
 			selectedChart,
 			showHeaderControls,
-			mode,
+			chartMode,
 			primaryData,
 		} = this.props;
 		const currentInterval = getIntervalForQuery( query );
@@ -115,7 +115,7 @@ export class ReportChart extends Component {
 				showHeaderControls={ showHeaderControls }
 				title={ selectedChart.label }
 				tooltipLabelFormat={ formats.tooltipLabelFormat }
-				tooltipTitle={ ( 'time-comparison' === mode && selectedChart.label ) || null }
+				tooltipTitle={ ( 'time-comparison' === chartMode && selectedChart.label ) || null }
 				tooltipValueFormat={ getTooltipValueFormat( selectedChart.type ) }
 				type={ getChartTypeForQuery( query ) }
 				valueType={ selectedChart.type }
@@ -135,7 +135,7 @@ export class ReportChart extends Component {
 		const isRequesting = primaryData.isRequesting;
 		const chartData = this.getItemChartData();
 
-		return this.renderChart( isRequesting, chartData );
+		return this.renderChart( 'item-comparison', isRequesting, chartData );
 	}
 
 	renderTimeComparison() {
@@ -148,12 +148,13 @@ export class ReportChart extends Component {
 		const isRequesting = primaryData.isRequesting || secondaryData.isRequesting;
 		const chartData = this.getTimeChartData();
 
-		return this.renderChart( isRequesting, chartData );
+		return this.renderChart( 'time-comparison', isRequesting, chartData );
 	}
 
 	render() {
-		const { mode } = this.props;
-		if ( 'item-comparison' === mode ) {
+		const { query, filters, mode } = this.props;
+		const chartMode = mode || getChartMode( filters, query ) || 'time-comparison';
+		if ( 'item-comparison' === chartMode ) {
 			return this.renderItemComparison();
 		}
 		return this.renderTimeComparison();
@@ -199,13 +200,12 @@ ReportChart.propTypes = {
 export default compose(
 	withSelect( ( select, props ) => {
 		const { query, endpoint, filters } = props;
-		const mode = props.mode || getChartMode( filters, query ) || 'time-comparison';
+		const chartMode = props.mode || getChartMode( filters, query ) || 'time-comparison';
 
-		if ( 'item-comparison' === mode ) {
+		if ( 'item-comparison' === chartMode ) {
 			const primaryData = getReportChartData( endpoint, 'primary', query, select );
 			return {
 				primaryData,
-				mode,
 			};
 		}
 
@@ -214,7 +214,6 @@ export default compose(
 		return {
 			primaryData,
 			secondaryData,
-			mode,
 		};
 	} )
 )( ReportChart );

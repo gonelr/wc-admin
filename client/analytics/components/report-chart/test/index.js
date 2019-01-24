@@ -30,7 +30,7 @@ const selectedChart = {
 };
 
 describe( 'ReportChart', () => {
-	test( 'should not set the mode prop by default', () => {
+	test( 'should set the time-comparison mode prop by default', () => {
 		const reportChart = shallow(
 			<ReportChart
 				path={ path }
@@ -42,7 +42,7 @@ describe( 'ReportChart', () => {
 		);
 		const chart = reportChart.find( 'Chart' );
 
-		expect( chart.props().mode ).toBeUndefined();
+		expect( chart.props().mode ).toEqual( 'time-comparison' );
 	} );
 
 	test( 'should set the mode prop depending on the active filter', () => {

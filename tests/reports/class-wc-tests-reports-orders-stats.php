@@ -3291,7 +3291,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 				'products'                => 2,
 				'segments'                => array(
 					array(
-						'segment_id' => $product_1->get_id(),
+						'segment_id'    => $product_1->get_id(),
+						'segment_label' => $product_1->get_name(),
 						'subtotals'  => array(
 							'orders_count'            => $p1_orders_count,
 							'num_items_sold'          => $p1_num_items_sold,
@@ -3308,7 +3309,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 						),
 					),
 					array(
-						'segment_id' => $product_2->get_id(),
+						'segment_id'    => $product_2->get_id(),
+						'segment_label' => $product_2->get_name(),
 						'subtotals'  => array(
 							'orders_count'            => $p2_orders_count,
 							'num_items_sold'          => $p2_num_items_sold,
@@ -3325,7 +3327,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 						),
 					),
 					array(
-						'segment_id' => $product_3->get_id(),
+						'segment_id'    => $product_3->get_id(),
+						'segment_label' => $product_3->get_name(),
 						'subtotals'  => array(
 							'orders_count'            => 0,
 							'num_items_sold'          => 0,
@@ -3365,7 +3368,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 						'num_new_customers'       => $i3_tot_new_customers,
 						'segments'                => array(
 							array(
-								'segment_id' => $product_1->get_id(),
+								'segment_id'    => $product_1->get_id(),
+								'segment_label' => $product_1->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => $i3_p1_orders_count,
 									'num_items_sold'      => $i3_p1_num_items_sold,
@@ -3382,7 +3386,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_2->get_id(),
+								'segment_id'     => $product_2->get_id(),
+								'segment_label'  => $product_2->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => $i3_p2_orders_count,
 									'num_items_sold'      => $i3_p2_num_items_sold,
@@ -3399,7 +3404,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_3->get_id(),
+								'segment_id'     => $product_3->get_id(),
+								'segment_label'  => $product_3->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => 0,
 									'num_items_sold'      => 0,
@@ -3439,7 +3445,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 						'num_new_customers'       => $i2_tot_new_customers,
 						'segments'                => array(
 							array(
-								'segment_id' => $product_1->get_id(),
+								'segment_id'     => $product_1->get_id(),
+								'segment_label'  => $product_1->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => $i2_p1_orders_count,
 									'num_items_sold'      => $i2_p1_num_items_sold,
@@ -3456,7 +3463,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_2->get_id(),
+								'segment_id'     => $product_2->get_id(),
+								'segment_label'  => $product_2->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => $i2_p2_orders_count,
 									'num_items_sold'      => $i2_p2_num_items_sold,
@@ -3473,7 +3481,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_3->get_id(),
+								'segment_id'     => $product_3->get_id(),
+								'segment_label'  => $product_3->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => 0,
 									'num_items_sold'      => 0,
@@ -3513,7 +3522,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 						'num_new_customers'       => 0,
 						'segments'                => array(
 							array(
-								'segment_id' => $product_1->get_id(),
+								'segment_id'     => $product_1->get_id(),
+								'segment_label'  => $product_1->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => 0,
 									'num_items_sold'      => 0,
@@ -3530,7 +3540,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_2->get_id(),
+								'segment_id'     => $product_2->get_id(),
+								'segment_label'  => $product_2->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => 0,
 									'num_items_sold'      => 0,
@@ -3547,7 +3558,8 @@ class WC_Tests_Reports_Orders_Stats extends WC_Unit_Test_Case {
 								),
 							),
 							array(
-								'segment_id' => $product_3->get_id(),
+								'segment_id'     => $product_3->get_id(),
+								'segment_label'  => $product_3->get_name(),
 								'subtotals'  => array(
 									'orders_count'        => 0,
 									'num_items_sold'      => 0,
