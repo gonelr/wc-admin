@@ -103,7 +103,12 @@ ReportSummary.propTypes = {
 
 export default compose(
 	withSelect( ( select, props ) => {
-		const { query, endpoint } = props;
+		const { endpoint, mode, compareMode } = props;
+		const query = { ...props.query };
+		// TODO Clean this one up.. Rename "segment" since comparisons are not segments?
+		if ( 'item-comparison' === mode ) {
+			query.segmentby = 'products' === compareMode ? 'product' : 'variation';
+		}
 		const summaryData = getSummaryNumbers( endpoint, query, select );
 
 		return {

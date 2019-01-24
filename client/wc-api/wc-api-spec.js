@@ -6,6 +6,7 @@
 import categories from './categories';
 import notes from './notes';
 import orders from './orders';
+import products from './products';
 import reportItems from './reports/items';
 import reportStats from './reports/stats';
 import reviews from './reviews';
@@ -20,6 +21,7 @@ function createWcApiSpec() {
 			...categories.selectors,
 			...notes.selectors,
 			...orders.selectors,
+			...products.selectors,
 			...reportItems.selectors,
 			...reportStats.selectors,
 			...reviews.selectors,
@@ -31,6 +33,7 @@ function createWcApiSpec() {
 					...categories.operations.read( resourceNames ),
 					...notes.operations.read( resourceNames ),
 					...orders.operations.read( resourceNames ),
+					...products.operations.read( resourceNames ),
 					...reportItems.operations.read( resourceNames ),
 					...reportStats.operations.read( resourceNames ),
 					...reviews.operations.read( resourceNames ),

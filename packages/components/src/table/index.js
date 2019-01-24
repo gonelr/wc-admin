@@ -45,12 +45,9 @@ import TableSummary from './summary';
 class TableCard extends Component {
 	constructor( props ) {
 		super( props );
-		const { compareBy, query } = props;
-
 		const showCols = props.headers.map( ( { key, hiddenByDefault } ) => ! hiddenByDefault && key ).filter( Boolean );
-		const selectedRows = getIdsFromQuery( query[ compareBy ] );
 
-		this.state = { showCols, selectedRows };
+		this.state = { showCols, selectedRows: [] };
 		this.onColumnToggle = this.onColumnToggle.bind( this );
 		this.onClickDownload = this.onClickDownload.bind( this );
 		this.onCompare = this.onCompare.bind( this );
@@ -59,17 +56,8 @@ class TableCard extends Component {
 		this.selectAllRows = this.selectAllRows.bind( this );
 	}
 
-	componentDidUpdate( { query: prevQuery, headers: prevHeaders } ) {
-		const { compareBy, headers, query } = this.props;
-		const prevIds = getIdsFromQuery( prevQuery[ compareBy ] );
-		const currentIds = getIdsFromQuery( query[ compareBy ] );
-		if ( ! isEqual( prevIds.sort(), currentIds.sort() ) ) {
-			/* eslint-disable react/no-did-update-set-state */
-			this.setState( {
-				selectedRows: currentIds,
-			} );
-			/* eslint-enable react/no-did-update-set-state */
-		}
+	componentDidUpdate( { headers: prevHeaders } ) {
+		const { headers } = this.props;
 		if ( ! isEqual( headers, prevHeaders ) ) {
 			/* eslint-disable react/no-did-update-set-state */
 			this.setState( {
@@ -142,6 +130,10 @@ class TableCard extends Component {
 	onCompare() {
 		const { compareBy, compareParam, onQueryChange } = this.props;
 		const { selectedRows } = this.state;
+		// Reset selected rows so the user can start a comparison again.
+		this.setState( {
+			selectedRows: [],
+		} );
 		if ( compareBy ) {
 			onQueryChange( 'compare' )( compareBy, compareParam, selectedRows.join( ',' ) );
 		}

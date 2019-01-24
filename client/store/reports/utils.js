@@ -162,14 +162,13 @@ function getRequestQuery( endpoint, dataType, query ) {
 	const interval = getIntervalForQuery( query );
 	const filterQuery = getFilterQuery( endpoint, query );
 	const end = datesFromQuery[ dataType ].before;
-	const endingTimeOfDay = end.isSame( moment(), 'day' ) ? 'now' : 'end';
-
 	return {
+		segmentby: query.segmentby,
 		order: 'asc',
 		interval,
 		per_page: MAX_PER_PAGE,
 		after: appendTimestamp( datesFromQuery[ dataType ].after, 'start' ),
-		before: appendTimestamp( end, endingTimeOfDay ),
+		before: appendTimestamp( end, 'end' ),
 		...filterQuery,
 	};
 }

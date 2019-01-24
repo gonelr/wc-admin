@@ -6,12 +6,11 @@ import { Component } from '@wordpress/element';
 import { compose } from '@wordpress/compose';
 import { format as formatDate } from '@wordpress/date';
 import PropTypes from 'prop-types';
-import { find, get } from 'lodash';
+import { isEmpty } from 'lodash';
 
 /**
  * WooCommerce dependencies
  */
-import { flattenFilters } from '@woocommerce/navigation';
 import {
 	getAllowedIntervalsForQuery,
 	getCurrentDates,
@@ -28,66 +27,34 @@ import { Chart } from '@woocommerce/components';
 import { getReportChartData, getTooltipValueFormat } from 'store/reports/utils';
 import ReportError from 'analytics/components/report-error';
 import withSelect from 'wc-api/with-select';
-
-export const DEFAULT_FILTER = 'all';
+import { getChartMode } from './utils';
 
 /**
  * Component that renders the chart in reports.
  */
 export class ReportChart extends Component {
-	getSelectedFilter( filters, query ) {
-		if ( filters.length === 0 ) {
-			return null;
-		}
-
-		const filterConfig = filters.pop();
-
-		if ( filterConfig.showFilters( query ) ) {
-			const allFilters = flattenFilters( filterConfig.filters );
-			const value = query[ filterConfig.param ] || DEFAULT_FILTER;
-			const selectedFilter = find( allFilters, { value } );
-			const selectedFilterParam = get( selectedFilter, [ 'settings', 'param' ] );
-
-			if ( ! selectedFilterParam || Object.keys( query ).includes( selectedFilterParam ) ) {
-				return selectedFilter;
-			}
-		}
-
-		return this.getSelectedFilter( filters, query );
+	getComparisonChartData() {
+		const { segmentData, selectedChart } = this.props;
+		const chartData = segmentData.data.intervals.map( function( interval ) {
+			const intervalData = {};
+			interval.subtotals.segments.forEach( function( segment ) {
+				if ( segment.segment_label ) {
+					intervalData[ segment.segment_label ] = {
+						value: segment.subtotals[ selectedChart.key ] || 0,
+					};
+				}
+			} );
+			return {
+				date: formatDate( 'Y-m-d\\TH:i:s', interval.date_start ),
+				...intervalData,
+			};
+		} );
+		return chartData;
 	}
 
-	getChartMode() {
-		const { filters, query } = this.props;
-		if ( ! filters ) {
-			return;
-		}
-		const clonedFilters = filters.slice( 0 );
-		const selectedFilter = this.getSelectedFilter( clonedFilters, query );
-
-		return get( selectedFilter, [ 'chartMode' ] );
-	}
-
-	render() {
-		const {
-			interactiveLegend,
-			itemsLabel,
-			legendPosition,
-			mode,
-			path,
-			primaryData,
-			query,
-			secondaryData,
-			selectedChart,
-			showHeaderControls,
-		} = this.props;
-
-		if ( primaryData.isError || secondaryData.isError ) {
-			return <ReportError isError />;
-		}
-
+	getTimeChartData() {
+		const { query, primaryData, secondaryData, selectedChart } = this.props;
 		const currentInterval = getIntervalForQuery( query );
-		const allowedIntervals = getAllowedIntervalsForQuery( query );
-		const formats = getDateFormatsForInterval( currentInterval, primaryData.data.intervals.length );
 		const { primary, secondary } = getCurrentDates( query );
 		const primaryKey = `${ primary.label } (${ primary.range })`;
 		const secondaryKey = `${ secondary.label } (${ secondary.range })`;
@@ -115,6 +82,56 @@ export class ReportChart extends Component {
 			};
 		} );
 
+		return chartData;
+	}
+
+	render() {
+		const {
+			interactiveLegend,
+			itemsLabel,
+			legendPosition,
+			path,
+			primaryData,
+			query,
+			secondaryData,
+			selectedChart,
+			showHeaderControls,
+			chartMode,
+			segmentData,
+		} = this.props;
+
+		const currentInterval = getIntervalForQuery( query );
+
+		let isRequesting;
+		let chartData;
+		let formats;
+
+		if ( 'item-comparison' === chartMode ) {
+			if ( segmentData.isError ) {
+				return <ReportError isError />;
+			}
+
+			isRequesting = segmentData.isRequesting;
+			chartData = this.getComparisonChartData();
+			formats = getDateFormatsForInterval( currentInterval, segmentData.data.intervals.length );
+		}
+
+		if ( 'time-comparison' === chartMode ) {
+			if ( ! primaryData || primaryData.isError || secondaryData.isError ) {
+				return <ReportError isError />;
+			}
+
+			isRequesting = primaryData.isRequesting || secondaryData.isRequesting;
+			chartData = this.getTimeChartData();
+			formats = getDateFormatsForInterval( currentInterval, primaryData.data.intervals.length );
+		}
+
+		const allowedIntervals = getAllowedIntervalsForQuery( query );
+
+		if ( isEmpty( chartData ) ) {
+			return null;
+		}
+
 		return (
 			<Chart
 				allowedIntervals={ allowedIntervals }
@@ -122,16 +139,16 @@ export class ReportChart extends Component {
 				dateParser={ '%Y-%m-%dT%H:%M:%S' }
 				interactiveLegend={ interactiveLegend }
 				interval={ currentInterval }
-				isRequesting={ primaryData.isRequesting || secondaryData.isRequesting }
+				isRequesting={ isRequesting }
 				itemsLabel={ itemsLabel }
 				legendPosition={ legendPosition }
-				mode={ mode || this.getChartMode() }
+				mode={ chartMode }
 				path={ path }
 				query={ query }
 				showHeaderControls={ showHeaderControls }
 				title={ selectedChart.label }
 				tooltipLabelFormat={ formats.tooltipLabelFormat }
-				tooltipTitle={ selectedChart.label }
+				tooltipTitle={ 'time-comparison' === chartMode && selectedChart.label }
 				tooltipValueFormat={ getTooltipValueFormat( selectedChart.type ) }
 				type={ getChartTypeForQuery( query ) }
 				valueType={ selectedChart.type }
@@ -180,12 +197,27 @@ ReportChart.propTypes = {
 
 export default compose(
 	withSelect( ( select, props ) => {
-		const { query, endpoint } = props;
+		const { query, endpoint, mode, filters, compareMode } = props;
+
+		const chartMode = mode || getChartMode( filters, query ) || 'time-comparison';
+
+		// TODO Clean this one up.. Rename "segment" since comparisons are not segments?
+		if ( 'item-comparison' === mode ) {
+			const segmentQuery = { ...query };
+			segmentQuery.segmentby = 'products' === compareMode ? 'product' : 'variation';
+			const segmentData = getReportChartData( endpoint, 'primary', segmentQuery, select );
+			return {
+				segmentData,
+				chartMode,
+			};
+		}
+
 		const primaryData = getReportChartData( endpoint, 'primary', query, select );
 		const secondaryData = getReportChartData( endpoint, 'secondary', query, select );
 		return {
 			primaryData,
 			secondaryData,
+			chartMode,
 		};
 	} )
 )( ReportChart );
